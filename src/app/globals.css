@@ -1,0 +1,524 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* ===== STRIKR Dark Sport Theme ===== */
+:root {
+  --radius: 1rem;
+  --background: oklch(0.08 0.02 280);
+  --foreground: oklch(0.98 0.01 280);
+  --card: oklch(0.12 0.025 280 / 0.6);
+  --card-foreground: oklch(0.98 0.01 280);
+  --popover: oklch(0.12 0.025 280 / 0.95);
+  --popover-foreground: oklch(0.98 0.01 280);
+  --primary: oklch(0.72 0.22 145);
+  --primary-foreground: oklch(0.12 0.02 280);
+  --secondary: oklch(0.18 0.02 280 / 0.6);
+  --secondary-foreground: oklch(0.98 0.01 280);
+  --muted: oklch(0.2 0.02 280 / 0.6);
+  --muted-foreground: oklch(0.7 0.02 280);
+  --accent: oklch(0.7 0.25 30);
+  --accent-foreground: oklch(0.12 0.02 280);
+  --destructive: oklch(0.65 0.25 25);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(0.2 0.02 280 / 0.6);
+  --ring: oklch(0.72 0.22 145 / 0.5);
+  --chart-1: oklch(0.72 0.22 145);
+  --chart-2: oklch(0.7 0.25 30);
+  --chart-3: oklch(0.65 0.2 250);
+  --chart-4: oklch(0.8 0.2 90);
+  --chart-5: oklch(0.6 0.25 320);
+  --sidebar: oklch(0.1 0.02 280);
+  --sidebar-foreground: oklch(0.98 0.01 280);
+  --sidebar-primary: oklch(0.72 0.22 145);
+  --sidebar-primary-foreground: oklch(0.98 0.01 280);
+  --sidebar-accent: oklch(0.18 0.02 280);
+  --sidebar-accent-foreground: oklch(0.98 0.01 280);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.72 0.22 145 / 0.5);
+
+  /* STRIKR brand colors */
+  --strikr-green: #00ff88;
+  --strikr-emerald: #10b981;
+  --strikr-orange: #ff6b35;
+  --strikr-red: #ff3366;
+  --strikr-violet: #a855f7;
+  --strikr-gold: #ffb800;
+  --strikr-cyan: #22d3ee;
+}
+
+.dark {
+  --background: oklch(0.06 0.02 280);
+  --foreground: oklch(0.98 0.01 280);
+  --card: oklch(0.12 0.025 280 / 0.6);
+  --card-foreground: oklch(0.98 0.01 280);
+  --popover: oklch(0.12 0.025 280 / 0.95);
+  --popover-foreground: oklch(0.98 0.01 280);
+  --primary: oklch(0.72 0.22 145);
+  --primary-foreground: oklch(0.12 0.02 280);
+  --secondary: oklch(0.18 0.02 280 / 0.6);
+  --secondary-foreground: oklch(0.98 0.01 280);
+  --muted: oklch(0.2 0.02 280 / 0.6);
+  --muted-foreground: oklch(0.7 0.02 280);
+  --accent: oklch(0.7 0.25 30);
+  --accent-foreground: oklch(0.12 0.02 280);
+  --destructive: oklch(0.65 0.25 25);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(0.2 0.02 280 / 0.6);
+  --ring: oklch(0.72 0.22 145 / 0.5);
+  --chart-1: oklch(0.72 0.22 145);
+  --chart-2: oklch(0.7 0.25 30);
+  --chart-3: oklch(0.65 0.2 250);
+  --chart-4: oklch(0.8 0.2 90);
+  --chart-5: oklch(0.6 0.25 320);
+  --sidebar: oklch(0.08 0.02 280);
+  --sidebar-foreground: oklch(0.98 0.01 280);
+  --sidebar-primary: oklch(0.72 0.22 145);
+  --sidebar-primary-foreground: oklch(0.98 0.01 280);
+  --sidebar-accent: oklch(0.18 0.02 280);
+  --sidebar-accent-foreground: oklch(0.98 0.01 280);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.72 0.22 145 / 0.5);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html, body {
+    @apply bg-background text-foreground;
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    background:
+      radial-gradient(ellipse 80% 60% at 20% -10%, rgba(0, 255, 136, 0.15), transparent 60%),
+      radial-gradient(ellipse 70% 50% at 100% 0%, rgba(168, 85, 247, 0.18), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 50% 110%, rgba(255, 107, 53, 0.12), transparent 60%),
+      var(--background);
+    background-attachment: fixed;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+}
+
+/* ===== Custom Gradient Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--strikr-green), var(--strikr-cyan), var(--strikr-violet));
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--strikr-emerald), var(--strikr-cyan), var(--strikr-violet));
+  background-clip: padding-box;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--strikr-green) rgba(255, 255, 255, 0.03);
+}
+
+/* ===== Glass Morphism ===== */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+.glass-strong {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow:
+    0 12px 48px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+.glass-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* ===== Gradient Text with shift animation ===== */
+.gradient-text {
+  background: linear-gradient(
+    90deg,
+    var(--strikr-green) 0%,
+    var(--strikr-cyan) 25%,
+    var(--strikr-violet) 50%,
+    var(--strikr-orange) 75%,
+    var(--strikr-green) 100%
+  );
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: gradient-shift 8s linear infinite;
+}
+.gradient-text-static {
+  background: linear-gradient(135deg, var(--strikr-green), var(--strikr-cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
+}
+
+/* ===== Shimmer Effect ===== */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-move 2.5s linear infinite;
+  pointer-events: none;
+}
+@keyframes shimmer-move {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Shimmer on buttons */
+.shimmer-btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.shimmer-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-move 3s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ===== Logo Shine ===== */
+.logo-shine {
+  position: relative;
+  overflow: hidden;
+}
+.logo-shine::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -75%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.6) 50%,
+    transparent 100%
+  );
+  transform: skewX(-25deg);
+  animation: logo-shine-move 4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes logo-shine-move {
+  0%, 60% { left: -75%; }
+  100% { left: 125%; }
+}
+
+/* ===== Pulse Glow ===== */
+.pulse-glow {
+  animation: pulse-glow 2.5s ease-in-out infinite;
+}
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 0 rgba(0, 255, 136, 0.5),
+      0 0 20px 0 rgba(0, 255, 136, 0.3);
+  }
+  50% {
+    box-shadow:
+      0 0 0 8px rgba(0, 255, 136, 0),
+      0 0 40px 4px rgba(0, 255, 136, 0.5);
+  }
+}
+.pulse-dot {
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.7;
+  }
+}
+
+/* ===== Live pulse red ===== */
+.live-pulse {
+  animation: live-pulse 1.2s ease-in-out infinite;
+}
+@keyframes live-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 51, 102, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(255, 51, 102, 0);
+  }
+}
+
+/* ===== Fade In/Out for filter ===== */
+.fade-in {
+  animation: fade-in 0.4s ease-out forwards;
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fade-in-scale {
+  animation: fade-in-scale 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+@keyframes fade-in-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ===== Ripple Effect ===== */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+.ripple-span {
+  position: absolute;
+  border-radius: 50%;
+  transform: scale(0);
+  animation: ripple-anim 0.7s linear;
+  background: rgba(255, 255, 255, 0.4);
+  pointer-events: none;
+}
+@keyframes ripple-anim {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* ===== Confidence Bar shimmer ===== */
+.confidence-bar {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+}
+.confidence-fill {
+  position: relative;
+  height: 100%;
+  border-radius: 999px;
+  overflow: hidden;
+  transition: width 1.2s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.confidence-fill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.5) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-move 2s linear infinite;
+}
+
+@keyframes bar-grow {
+  from { width: 0%; }
+  to { width: var(--target-pct, 100%); }
+}
+
+/* ===== Card Tilt ===== */
+.tilt-card {
+  transform-style: preserve-3d;
+  transition: transform 0.2s ease-out;
+  will-change: transform;
+}
+
+/* ===== Gradient Badges ===== */
+.badge-live {
+  background: linear-gradient(135deg, #ff3366, #ff6b35);
+  color: white;
+  box-shadow: 0 4px 14px rgba(255, 51, 102, 0.4);
+}
+.badge-soon {
+  background: linear-gradient(135deg, #00ff88, #22d3ee);
+  color: #06121a;
+  box-shadow: 0 4px 14px rgba(0, 255, 136, 0.35);
+}
+.badge-finished {
+  background: linear-gradient(135deg, #64748b, #475569);
+  color: white;
+}
+.badge-hot {
+  background: linear-gradient(135deg, #ffb800, #ff6b35);
+  color: #1a0f00;
+  box-shadow: 0 4px 14px rgba(255, 184, 0, 0.4);
+}
+.badge-violet {
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  color: white;
+}
+
+/* ===== Animated Background Glow blobs ===== */
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+  animation: blob-float 12s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes blob-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -40px) scale(1.1); }
+  66% { transform: translate(-20px, 30px) scale(0.95); }
+}
+
+/* ===== Hover lift for cards ===== */
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 16px 48px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(0, 255, 136, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* ===== Number animation ===== */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ===== Spinning glow ring ===== */
+.spin-ring {
+  animation: spin 6s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ===== Float animation ===== */
+.float {
+  animation: float 4s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+/* Hide scrollbar utility for horizontal scrollers */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Telegram safe area padding */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
