@@ -347,14 +347,14 @@ interface FDFMatch {
     shortName: string;
     tla: string;
     crest: string;
-  };
+  } | null;
   awayTeam: {
     id: number;
     name: string;
     shortName: string;
     tla: string;
     crest: string;
-  };
+  } | null;
   score: {
     winner: string | null;
     duration: string;
@@ -443,42 +443,46 @@ async function fetchLiveMatchesFromApi(): Promise<Match[] | null> {
   const cached = getCached<Match[]>(cacheKey);
   if (cached) return cached;
 
-  // /v4/matches returns matches for today and the next few days across all comps
+  // Build date range: yesterday (for recent finished) → +7 days
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const nextWeek = new Date(today);
+  nextWeek.setDate(today.getDate() + 7);
+  const fmt = (d: Date) => d.toISOString().slice(0, 10);
+  const dateFrom = fmt(yesterday);
+  const dateTo = fmt(nextWeek);
+
+  // /v4/matches with dateFrom/dateTo returns all matches across competitions
+  // we have access to in the date range.
   const data = await fdfFetch<{ matches: FDFMatch[]; count: number }>(
-    `/matches?competitions=${TRACKED_COMPS.join(",")}&status=SCHEDULED,LIVE,IN_PLAY,PAUSED,TIMED`,
+    `/matches?dateFrom=${dateFrom}&dateTo=${dateTo}`,
   );
 
   if (!data || !data.matches || data.matches.length === 0) {
     return null;
   }
 
-  // Also fetch today's finished matches to show recent results
-  const finishedData = await fdfFetch<{ matches: FDFMatch[]; count: number }>(
-    `/matches?competitions=${TRACKED_COMPS.join(",")}&status=FINISHED`,
-  );
-
-  const all = [
-    ...(data.matches || []),
-    ...((finishedData?.matches || []).slice(0, 6)),
-  ];
-
-  // Deduplicate by id
-  const seen = new Set<number>();
-  const unique = all.filter((m) => {
-    if (seen.has(m.id)) return false;
-    seen.add(m.id);
-    return true;
-  });
-
   // Build Match objects
   const matches: Match[] = [];
   const formPromises: Array<Promise<void>> = [];
 
-  for (const m of unique) {
-    const leagueMeta = LEAGUES[m.competition.code] || {
-      ...DEFAULT_LEAGUE,
-      name: m.competition.name,
-    };
+  for (const m of data.matches) {
+    // Skip TBD matchups (homeTeam/awayTeam can be null in knockout brackets)
+    if (!m.homeTeam || !m.awayTeam) continue;
+
+    // Only include tracked competitions
+    if (!LEAGUES[m.competition.code] && !TRACKED_COMPS.includes(m.competition.code)) {
+      // Still include if it's a known competition we didn't pre-list
+      // but skip obscure ones
+      continue;
+    }
+
+    const leagueMeta =
+      LEAGUES[m.competition.code] || {
+        ...DEFAULT_LEAGUE,
+        name: m.competition.name,
+      };
 
     const homeForm: ("W" | "D" | "L")[] = [];
     const awayForm: ("W" | "D" | "L")[] = [];
@@ -486,7 +490,10 @@ async function fetchLiveMatchesFromApi(): Promise<Match[] | null> {
     const homeTeam: Team = {
       id: `t${m.homeTeam.id}`,
       name: m.homeTeam.name,
-      shortName: m.homeTeam.tla || m.homeTeam.shortName || m.homeTeam.name.slice(0, 3),
+      shortName:
+        m.homeTeam.tla ||
+        m.homeTeam.shortName ||
+        m.homeTeam.name.slice(0, 3),
       crest: m.homeTeam.crest || "⚽",
       color: getTeamColor(m.homeTeam.name),
       form: homeForm,
@@ -495,7 +502,10 @@ async function fetchLiveMatchesFromApi(): Promise<Match[] | null> {
     const awayTeam: Team = {
       id: `t${m.awayTeam.id}`,
       name: m.awayTeam.name,
-      shortName: m.awayTeam.tla || m.awayTeam.shortName || m.awayTeam.name.slice(0, 3),
+      shortName:
+        m.awayTeam.tla ||
+        m.awayTeam.shortName ||
+        m.awayTeam.name.slice(0, 3),
       crest: m.awayTeam.crest || "⚽",
       color: getTeamColor(m.awayTeam.name),
       form: awayForm,
@@ -512,7 +522,6 @@ async function fetchLiveMatchesFromApi(): Promise<Match[] | null> {
       m.status === "LIVE"
     ) {
       status = "LIVE";
-      // Estimate minute from kickoff time
       const kickoff = new Date(m.utcDate).getTime();
       const elapsed = Math.floor((Date.now() - kickoff) / 60000);
       minute = Math.min(95, Math.max(1, elapsed));
@@ -522,10 +531,22 @@ async function fetchLiveMatchesFromApi(): Promise<Match[] | null> {
       status = "UPCOMING";
     }
 
-    if (m.score.fullTime.home !== null && m.score.fullTime.away !== null) {
-      score = { home: m.score.fullTime.home, away: m.score.fullTime.away };
-    } else if (m.score.halfTime.home !== null && m.score.halfTime.away !== null) {
-      score = { home: m.score.halfTime.home, away: m.score.halfTime.away };
+    if (
+      m.score.fullTime.home !== null &&
+      m.score.fullTime.away !== null
+    ) {
+      score = {
+        home: m.score.fullTime.home,
+        away: m.score.fullTime.away,
+      };
+    } else if (
+      m.score.halfTime.home !== null &&
+      m.score.halfTime.away !== null
+    ) {
+      score = {
+        home: m.score.halfTime.home,
+        away: m.score.halfTime.away,
+      };
     }
 
     const stage = m.stage || undefined;
@@ -534,7 +555,10 @@ async function fetchLiveMatchesFromApi(): Promise<Match[] | null> {
     // Importance: WC playoffs and finals = 5, WC group = 4, CL = 4, top leagues = 3
     let importance = 3;
     if (m.competition.code === "WC") {
-      if (stage && /FINAL|SEMI|LAST_16|LAST_8|LAST_32|QUARTER/i.test(stage)) {
+      if (
+        stage &&
+        /FINAL|SEMI|LAST_16|LAST_8|LAST_32|QUARTER/i.test(stage)
+      ) {
         importance = 5;
       } else {
         importance = 4;
@@ -560,9 +584,6 @@ async function fetchLiveMatchesFromApi(): Promise<Match[] | null> {
 
     const prediction = makePrediction(homeTeam, awayTeam, matchId, stage);
 
-    // Build H2H from the team's last 5 finished matches
-    const h2h: H2HEntry[] = [];
-
     matches.push({
       id: matchId,
       homeTeam,
@@ -579,8 +600,9 @@ async function fetchLiveMatchesFromApi(): Promise<Match[] | null> {
         ? `${m.referees[0].nationality} referee`
         : leagueMeta.country,
       prediction,
-      stats: status === "LIVE" ? generateStats(m, homeTeam, awayTeam) : undefined,
-      h2h,
+      stats:
+        status === "LIVE" ? generateStats(m, homeTeam, awayTeam) : undefined,
+      h2h: [],
       importance,
       stage,
       group,
@@ -594,10 +616,15 @@ async function fetchLiveMatchesFromApi(): Promise<Match[] | null> {
     new Promise((r) => setTimeout(r, 3000)),
   ]);
 
-  // Sort: LIVE first, then UPCOMING by date, then FINISHED
+  // Sort: LIVE first, then UPCOMING by date, then FINISHED by most recent
   matches.sort((a, b) => {
     if (a.status === "LIVE" && b.status !== "LIVE") return -1;
     if (a.status !== "LIVE" && b.status === "LIVE") return 1;
+    if (a.status === "FINISHED" && b.status === "FINISHED") {
+      return (
+        new Date(b.kickoff).getTime() - new Date(a.kickoff).getTime()
+      );
+    }
     return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
   });
 
