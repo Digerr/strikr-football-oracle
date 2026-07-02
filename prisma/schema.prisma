@@ -13,6 +13,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Empty env fallback for serverless platforms where DATABASE_URL may not be set.
+// STRIKR doesn't use the DB at runtime (data lives in src/lib/football-data.ts),
+// so this is just to let `prisma generate` succeed during build.
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
