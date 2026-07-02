@@ -28,6 +28,7 @@ function formatKickoff(iso: string): string {
 }
 
 function FormBadges({ form }: { form: ("W" | "D" | "L")[] }) {
+  if (!form || form.length === 0) return null;
   return (
     <div className="flex gap-1">
       {form.slice(0, 5).map((r, i) => (
@@ -35,10 +36,10 @@ function FormBadges({ form }: { form: ("W" | "D" | "L")[] }) {
           key={i}
           className={`w-3.5 h-3.5 rounded-[3px] text-[8px] font-black flex items-center justify-center ${
             r === "W"
-              ? "bg-[#00ff88] text-[#06121a]"
+              ? "bg-[var(--strikr-green)] text-white"
               : r === "D"
-                ? "bg-white/15 text-white/70"
-                : "bg-[#ff3366] text-white"
+                ? "bg-[var(--surface-3)] text-foreground/70"
+                : "bg-[var(--strikr-red)] text-white"
           }`}
         >
           {r === "W" ? "В" : r === "D" ? "Н" : "П"}
@@ -48,7 +49,7 @@ function FormBadges({ form }: { form: ("W" | "D" | "L")[] }) {
   );
 }
 
-export function MatchCard({ match, onClick, index = 0 }: MatchCardProps) {
+export const MatchCard = ({ match, onClick, index = 0 }: MatchCardProps) => {
   const p = match.prediction;
   const isLive = match.status === "LIVE";
   const isFinished = match.status === "FINISHED";
@@ -57,38 +58,33 @@ export function MatchCard({ match, onClick, index = 0 }: MatchCardProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.4) }}
-      exit={{ opacity: 0, scale: 0.96 }}
+      transition={{ duration: 0.25, delay: Math.min(index * 0.03, 0.2) }}
+      exit={{ opacity: 0 }}
     >
-      <GlassCard
-        tilt
-        glow
-        onClick={onClick}
-        className="p-4"
-      >
+      <GlassCard onClick={onClick} glow className="p-4">
         {/* Top row: league + status */}
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             <span
-              className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full text-white"
+              className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full text-white flex-shrink-0"
               style={{
-                background: `linear-gradient(135deg, ${match.leagueColor}, ${match.leagueColor}99)`,
+                background: `linear-gradient(135deg, ${match.leagueColor}, ${match.leagueColor}cc)`,
               }}
             >
               {match.leagueShort}
             </span>
             {match.stage && (
-              <span className="text-[9px] text-white/50 font-bold uppercase tracking-wider">
+              <span className="text-[9px] text-foreground/50 font-bold uppercase tracking-wider truncate">
                 {match.stage.replace(/_/g, " ")}
               </span>
             )}
-            <span className="text-[10px] text-white/40 font-medium">
+            <span className="text-[10px] text-foreground/40 font-medium truncate">
               {match.country}
             </span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             {isHot && (
               <span className="badge-hot text-[9px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full flex items-center gap-1">
                 <Flame className="w-2.5 h-2.5" /> Hot
@@ -101,7 +97,7 @@ export function MatchCard({ match, onClick, index = 0 }: MatchCardProps) {
               </span>
             )}
             {isUpcoming && (
-              <span className="text-[10px] text-white/55 font-semibold flex items-center gap-1">
+              <span className="text-[10px] text-foreground/55 font-semibold flex items-center gap-1">
                 <Clock className="w-3 h-3" />
                 {formatKickoff(match.kickoff)}
               </span>
@@ -123,20 +119,20 @@ export function MatchCard({ match, onClick, index = 0 }: MatchCardProps) {
                 color={match.homeTeam.color}
                 size={32}
               />
-              <span className="font-bold text-sm text-white truncate">
+              <span className="font-bold text-sm text-foreground truncate">
                 {match.homeTeam.name}
               </span>
             </div>
             <FormBadges form={match.homeTeam.form} />
           </div>
 
-          <div className="flex flex-col items-center px-2">
+          <div className="flex flex-col items-center px-2 flex-shrink-0">
             {isUpcoming ? (
               <>
                 <div className="text-2xl font-black gradient-text-static tabular">
                   VS
                 </div>
-                <div className="text-[9px] text-white/40 mt-0.5">
+                <div className="text-[9px] text-foreground/40 mt-0.5">
                   {new Date(match.kickoff).toLocaleTimeString("ru", {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -144,9 +140,9 @@ export function MatchCard({ match, onClick, index = 0 }: MatchCardProps) {
                 </div>
               </>
             ) : (
-              <div className="text-2xl font-black text-white tabular flex items-baseline gap-1.5">
+              <div className="text-2xl font-black text-foreground tabular flex items-baseline gap-1.5">
                 <span>{match.score?.home}</span>
-                <span className="text-white/30 text-base">:</span>
+                <span className="text-foreground/30 text-base">:</span>
                 <span>{match.score?.away}</span>
               </div>
             )}
@@ -154,7 +150,7 @@ export function MatchCard({ match, onClick, index = 0 }: MatchCardProps) {
 
           <div className="flex-1 min-w-0 text-right">
             <div className="flex items-center justify-end gap-2 mb-1">
-              <span className="font-bold text-sm text-white truncate">
+              <span className="font-bold text-sm text-foreground truncate">
                 {match.awayTeam.name}
               </span>
               <TeamCrest
@@ -170,25 +166,30 @@ export function MatchCard({ match, onClick, index = 0 }: MatchCardProps) {
         </div>
 
         {/* AI pick highlight */}
-        <div className="mt-3 glass rounded-xl p-2.5 flex items-center justify-between gap-2">
+        <div className="mt-3 surface-2 rounded-xl p-2.5 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#a855f7] to-[#6366f1] flex items-center justify-center flex-shrink-0">
+            <div
+              className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{
+                background: "linear-gradient(135deg, var(--strikr-purple), var(--strikr-violet))",
+              }}
+            >
               <TrendingUp className="w-3.5 h-3.5 text-white" />
             </div>
             <div className="min-w-0">
-              <div className="text-[9px] uppercase tracking-wider text-white/45 font-bold">
+              <div className="text-[9px] uppercase tracking-wider text-foreground/45 font-bold">
                 AI прогноз
               </div>
-              <div className="text-[11px] font-bold text-white truncate">
+              <div className="text-[11px] font-bold text-foreground truncate">
                 {p.pick}
               </div>
             </div>
           </div>
           <div className="text-right flex-shrink-0">
-            <div className="text-[9px] uppercase tracking-wider text-white/45 font-bold">
+            <div className="text-[9px] uppercase tracking-wider text-foreground/45 font-bold">
               Увер.
             </div>
-            <div className="text-base font-black text-[#00ff88] tabular">
+            <div className="text-base font-black text-[var(--strikr-green)] tabular">
               {p.confidence}%
             </div>
           </div>
@@ -198,7 +199,7 @@ export function MatchCard({ match, onClick, index = 0 }: MatchCardProps) {
         {!isFinished && (
           <div className="mt-3 grid grid-cols-3 gap-2">
             <div>
-              <div className="text-[9px] text-white/50 mb-1 font-semibold">
+              <div className="text-[9px] text-foreground/50 mb-1 font-semibold">
                 П1
               </div>
               <ConfidenceBar
@@ -208,12 +209,12 @@ export function MatchCard({ match, onClick, index = 0 }: MatchCardProps) {
                 height={5}
                 animate={false}
               />
-              <div className="text-[10px] font-bold text-white/80 mt-1 tabular">
+              <div className="text-[10px] font-bold text-foreground/80 mt-1 tabular">
                 {p.homeWinProb}%
               </div>
             </div>
             <div>
-              <div className="text-[9px] text-white/50 mb-1 font-semibold">
+              <div className="text-[9px] text-foreground/50 mb-1 font-semibold">
                 X
               </div>
               <ConfidenceBar
@@ -223,12 +224,12 @@ export function MatchCard({ match, onClick, index = 0 }: MatchCardProps) {
                 height={5}
                 animate={false}
               />
-              <div className="text-[10px] font-bold text-white/80 mt-1 tabular">
+              <div className="text-[10px] font-bold text-foreground/80 mt-1 tabular">
                 {p.drawProb}%
               </div>
             </div>
             <div>
-              <div className="text-[9px] text-white/50 mb-1 font-semibold">
+              <div className="text-[9px] text-foreground/50 mb-1 font-semibold">
                 П2
               </div>
               <ConfidenceBar
@@ -238,7 +239,7 @@ export function MatchCard({ match, onClick, index = 0 }: MatchCardProps) {
                 height={5}
                 animate={false}
               />
-              <div className="text-[10px] font-bold text-white/80 mt-1 tabular">
+              <div className="text-[10px] font-bold text-foreground/80 mt-1 tabular">
                 {p.awayWinProb}%
               </div>
             </div>
@@ -246,7 +247,7 @@ export function MatchCard({ match, onClick, index = 0 }: MatchCardProps) {
         )}
 
         {/* Venue */}
-        <div className="mt-3 flex items-center gap-1 text-[10px] text-white/35">
+        <div className="mt-3 flex items-center gap-1 text-[10px] text-foreground/35">
           <MapPin className="w-3 h-3" />
           <span className="truncate">{match.venue}</span>
           {match.weather && (
@@ -262,4 +263,4 @@ export function MatchCard({ match, onClick, index = 0 }: MatchCardProps) {
       </GlassCard>
     </motion.div>
   );
-}
+};

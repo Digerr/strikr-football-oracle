@@ -43,30 +43,36 @@ function StatRow({
   return (
     <div className="py-2.5">
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-sm font-bold text-white tabular">
+        <span className="text-sm font-bold text-foreground tabular">
           {home}
           {suffix}
         </span>
-        <span className="text-[10px] uppercase tracking-wider text-white/50 font-semibold">
+        <span className="text-[10px] uppercase tracking-wider text-foreground/50 font-semibold">
           {label}
         </span>
-        <span className="text-sm font-bold text-white tabular">
+        <span className="text-sm font-bold text-foreground tabular">
           {away}
           {suffix}
         </span>
       </div>
       {type === "bar" && (
         <div className="flex items-center gap-1 h-1.5">
-          <div className="flex-1 h-full bg-white/5 rounded-l-full overflow-hidden flex justify-end">
+          <div className="flex-1 h-full bg-[var(--surface-3)] rounded-l-full overflow-hidden flex justify-end">
             <div
-              className="h-full bg-gradient-to-l from-[#00ff88] to-[#10b981] transition-all duration-700"
-              style={{ width: `${homePct}%` }}
+              className="h-full transition-all duration-500"
+              style={{
+                width: `${homePct}%`,
+                background: "linear-gradient(to left, var(--strikr-green), var(--strikr-green-dark))",
+              }}
             />
           </div>
-          <div className="flex-1 h-full bg-white/5 rounded-r-full overflow-hidden">
+          <div className="flex-1 h-full bg-[var(--surface-3)] rounded-r-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-[#a855f7] to-[#6366f1] transition-all duration-700"
-              style={{ width: `${awayPct}%` }}
+              className="h-full transition-all duration-500"
+              style={{
+                width: `${awayPct}%`,
+                background: "linear-gradient(to right, var(--strikr-purple), var(--strikr-violet))",
+              }}
             />
           </div>
         </div>
@@ -83,35 +89,36 @@ export function MatchDetailModal({ match, onClose }: MatchDetailModalProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
         >
           <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-md"
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={onClose}
           />
           <motion.div
-            initial={{ y: "100%", opacity: 0.5, scale: 0.98 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
+            initial={{ y: "100%", opacity: 0.5 }}
+            animate={{ y: 0, opacity: 1 }}
             exit={{ y: "100%", opacity: 0 }}
-            transition={{ type: "spring", damping: 28, stiffness: 320 }}
+            transition={{ type: "spring", damping: 30, stiffness: 350 }}
             className="relative w-full max-w-2xl max-h-[92vh] overflow-y-auto no-scrollbar safe-bottom"
           >
-            <GlassCard className="p-5 sm:p-6 rounded-t-3xl sm:rounded-3xl" tilt={false}>
+            <GlassCard className="p-5 sm:p-6 rounded-t-3xl sm:rounded-3xl">
               {/* Close button */}
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full glass flex items-center justify-center text-white/70 hover:text-white transition-colors"
+                className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full surface-2 flex items-center justify-center text-foreground/70 hover:text-foreground transition-colors"
                 aria-label="Close"
               >
                 <X className="w-4 h-4" />
               </button>
 
               {/* League + status */}
-              <div className="flex items-center gap-2 mb-4 pr-12">
+              <div className="flex items-center gap-2 mb-4 pr-12 flex-wrap">
                 <span
                   className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full text-white"
                   style={{
-                    background: `linear-gradient(135deg, ${match.leagueColor}, ${match.leagueColor}99)`,
+                    background: `linear-gradient(135deg, ${match.leagueColor}, ${match.leagueColor}cc)`,
                   }}
                 >
                   {match.league}
@@ -145,25 +152,27 @@ export function MatchDetailModal({ match, onClose }: MatchDetailModalProps) {
                       rounded="rounded-2xl"
                     />
                   </div>
-                  <div className="font-bold text-sm text-white">
+                  <div className="font-bold text-sm text-foreground">
                     {match.homeTeam.name}
                   </div>
-                  <div className="flex gap-1 justify-center mt-1.5">
-                    {match.homeTeam.form.slice(0, 5).map((r, i) => (
-                      <span
-                        key={i}
-                        className={`w-3 h-3 rounded-[3px] text-[8px] font-black flex items-center justify-center ${
-                          r === "W"
-                            ? "bg-[#00ff88] text-[#06121a]"
-                            : r === "D"
-                              ? "bg-white/15 text-white/70"
-                              : "bg-[#ff3366] text-white"
-                        }`}
-                      >
-                        {r === "W" ? "В" : r === "D" ? "Н" : "П"}
-                      </span>
-                    ))}
-                  </div>
+                  {match.homeTeam.form.length > 0 && (
+                    <div className="flex gap-1 justify-center mt-1.5">
+                      {match.homeTeam.form.slice(0, 5).map((r, i) => (
+                        <span
+                          key={i}
+                          className={`w-3 h-3 rounded-[3px] text-[8px] font-black flex items-center justify-center ${
+                            r === "W"
+                              ? "bg-[var(--strikr-green)] text-white"
+                              : r === "D"
+                                ? "bg-[var(--surface-3)] text-foreground/70"
+                                : "bg-[var(--strikr-red)] text-white"
+                          }`}
+                        >
+                          {r === "W" ? "В" : r === "D" ? "Н" : "П"}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="text-center px-2">
@@ -172,7 +181,7 @@ export function MatchDetailModal({ match, onClose }: MatchDetailModalProps) {
                       <div className="text-4xl font-black gradient-text-static tabular">
                         VS
                       </div>
-                      <div className="text-[10px] text-white/45 mt-1">
+                      <div className="text-[10px] text-foreground/45 mt-1">
                         {new Date(match.kickoff).toLocaleString("ru", {
                           day: "2-digit",
                           month: "short",
@@ -182,9 +191,9 @@ export function MatchDetailModal({ match, onClose }: MatchDetailModalProps) {
                       </div>
                     </>
                   ) : (
-                    <div className="text-5xl font-black text-white tabular flex items-baseline gap-2">
+                    <div className="text-5xl font-black text-foreground tabular flex items-baseline gap-2">
                       <span>{match.score?.home}</span>
-                      <span className="text-white/30 text-2xl">:</span>
+                      <span className="text-foreground/30 text-2xl">:</span>
                       <span>{match.score?.away}</span>
                     </div>
                   )}
@@ -199,70 +208,77 @@ export function MatchDetailModal({ match, onClose }: MatchDetailModalProps) {
                       rounded="rounded-2xl"
                     />
                   </div>
-                  <div className="font-bold text-sm text-white">
+                  <div className="font-bold text-sm text-foreground">
                     {match.awayTeam.name}
                   </div>
-                  <div className="flex gap-1 justify-center mt-1.5">
-                    {match.awayTeam.form.slice(0, 5).map((r, i) => (
-                      <span
-                        key={i}
-                        className={`w-3 h-3 rounded-[3px] text-[8px] font-black flex items-center justify-center ${
-                          r === "W"
-                            ? "bg-[#00ff88] text-[#06121a]"
-                            : r === "D"
-                              ? "bg-white/15 text-white/70"
-                              : "bg-[#ff3366] text-white"
-                        }`}
-                      >
-                        {r === "W" ? "В" : r === "D" ? "Н" : "П"}
-                      </span>
-                    ))}
-                  </div>
+                  {match.awayTeam.form.length > 0 && (
+                    <div className="flex gap-1 justify-center mt-1.5">
+                      {match.awayTeam.form.slice(0, 5).map((r, i) => (
+                        <span
+                          key={i}
+                          className={`w-3 h-3 rounded-[3px] text-[8px] font-black flex items-center justify-center ${
+                            r === "W"
+                              ? "bg-[var(--strikr-green)] text-white"
+                              : r === "D"
+                                ? "bg-[var(--surface-3)] text-foreground/70"
+                                : "bg-[var(--strikr-red)] text-white"
+                          }`}
+                        >
+                          {r === "W" ? "В" : r === "D" ? "Н" : "П"}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Meta */}
               <div className="grid grid-cols-3 gap-2 mb-5">
-                <div className="glass rounded-xl p-2.5 text-center">
-                  <MapPin className="w-3.5 h-3.5 text-[#00ff88] mx-auto mb-1" />
-                  <div className="text-[10px] text-white/45 font-semibold uppercase tracking-wider">
+                <div className="surface-2 rounded-xl p-2.5 text-center">
+                  <MapPin className="w-3.5 h-3.5 text-[var(--strikr-brand)] mx-auto mb-1" />
+                  <div className="text-[10px] text-foreground/45 font-semibold uppercase tracking-wider">
                     Стадион
                   </div>
-                  <div className="text-[10px] text-white/80 font-medium truncate">
+                  <div className="text-[10px] text-foreground/80 font-medium truncate">
                     {match.venue.split(",")[0]}
                   </div>
                 </div>
-                <div className="glass rounded-xl p-2.5 text-center">
-                  <Clock className="w-3.5 h-3.5 text-[#22d3ee] mx-auto mb-1" />
-                  <div className="text-[10px] text-white/45 font-semibold uppercase tracking-wider">
+                <div className="surface-2 rounded-xl p-2.5 text-center">
+                  <Clock className="w-3.5 h-3.5 text-[var(--strikr-cyan)] mx-auto mb-1" />
+                  <div className="text-[10px] text-foreground/45 font-semibold uppercase tracking-wider">
                     Начало
                   </div>
-                  <div className="text-[10px] text-white/80 font-medium">
+                  <div className="text-[10px] text-foreground/80 font-medium">
                     {new Date(match.kickoff).toLocaleTimeString("ru", {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
                   </div>
                 </div>
-                <div className="glass rounded-xl p-2.5 text-center">
-                  <Cloud className="w-3.5 h-3.5 text-[#a855f7] mx-auto mb-1" />
-                  <div className="text-[10px] text-white/45 font-semibold uppercase tracking-wider">
+                <div className="surface-2 rounded-xl p-2.5 text-center">
+                  <Cloud className="w-3.5 h-3.5 text-[var(--strikr-purple)] mx-auto mb-1" />
+                  <div className="text-[10px] text-foreground/45 font-semibold uppercase tracking-wider">
                     Погода
                   </div>
-                  <div className="text-[10px] text-white/80 font-medium">
-                    {match.weather} {match.temperature}°
+                  <div className="text-[10px] text-foreground/80 font-medium">
+                    {match.weather || "—"} {match.temperature}°
                   </div>
                 </div>
               </div>
 
               {/* AI Prediction block */}
-              <div className="glass-card rounded-2xl p-4 mb-5">
+              <div className="surface-card rounded-2xl p-4 mb-5">
                 <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#a855f7] to-[#6366f1] flex items-center justify-center pulse-glow">
+                  <div
+                    className="w-8 h-8 rounded-xl flex items-center justify-center pulse-glow"
+                    style={{
+                      background: "linear-gradient(135deg, var(--strikr-purple), var(--strikr-violet))",
+                    }}
+                  >
                     <TrendingUp className="w-4 h-4 text-white" />
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase tracking-wider text-white/45 font-bold">
+                    <div className="text-[10px] uppercase tracking-wider text-foreground/45 font-bold">
                       AI Прогноз
                     </div>
                     <div className="text-sm font-black gradient-text-static">
@@ -270,37 +286,37 @@ export function MatchDetailModal({ match, onClose }: MatchDetailModalProps) {
                     </div>
                   </div>
                   <div className="ml-auto text-right">
-                    <div className="text-[9px] uppercase tracking-wider text-white/45 font-bold">
+                    <div className="text-[9px] uppercase tracking-wider text-foreground/45 font-bold">
                       Уверенность
                     </div>
-                    <div className="text-2xl font-black text-[#00ff88] tabular">
+                    <div className="text-2xl font-black text-[var(--strikr-green)] tabular">
                       {match.prediction.confidence}%
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 mb-3">
-                  <div className="glass rounded-lg p-2 text-center">
-                    <div className="text-[9px] text-white/45 font-bold uppercase tracking-wider mb-1">
+                  <div className="surface-2 rounded-lg p-2 text-center">
+                    <div className="text-[9px] text-foreground/45 font-bold uppercase tracking-wider mb-1">
                       П1
                     </div>
-                    <div className="text-base font-black text-[#00ff88] tabular">
+                    <div className="text-base font-black text-[var(--strikr-green)] tabular">
                       {match.prediction.homeWinProb}%
                     </div>
                   </div>
-                  <div className="glass rounded-lg p-2 text-center">
-                    <div className="text-[9px] text-white/45 font-bold uppercase tracking-wider mb-1">
+                  <div className="surface-2 rounded-lg p-2 text-center">
+                    <div className="text-[9px] text-foreground/45 font-bold uppercase tracking-wider mb-1">
                       Ничья
                     </div>
-                    <div className="text-base font-black text-[#ff6b35] tabular">
+                    <div className="text-base font-black text-[var(--strikr-orange)] tabular">
                       {match.prediction.drawProb}%
                     </div>
                   </div>
-                  <div className="glass rounded-lg p-2 text-center">
-                    <div className="text-[9px] text-white/45 font-bold uppercase tracking-wider mb-1">
+                  <div className="surface-2 rounded-lg p-2 text-center">
+                    <div className="text-[9px] text-foreground/45 font-bold uppercase tracking-wider mb-1">
                       П2
                     </div>
-                    <div className="text-base font-black text-[#a855f7] tabular">
+                    <div className="text-base font-black text-[var(--strikr-purple)] tabular">
                       {match.prediction.awayWinProb}%
                     </div>
                   </div>
@@ -321,14 +337,14 @@ export function MatchDetailModal({ match, onClose }: MatchDetailModalProps) {
                   />
                 </div>
 
-                <div className="mt-3 text-[11px] text-white/55">
-                  <span className="font-bold text-white/80">Ожидаемый счёт: </span>
-                  <span className="tabular text-[#00ff88] font-bold">
+                <div className="mt-3 text-[11px] text-foreground/55">
+                  <span className="font-bold text-foreground/80">Ожидаемый счёт: </span>
+                  <span className="tabular text-[var(--strikr-green)] font-bold">
                     {match.prediction.expectedScore.home} : {match.prediction.expectedScore.away}
                   </span>
                   <span className="mx-1">·</span>
-                  <span className="font-bold text-white/80">xG: </span>
-                  <span className="tabular text-[#22d3ee] font-bold">
+                  <span className="font-bold text-foreground/80">xG: </span>
+                  <span className="tabular text-[var(--strikr-cyan)] font-bold">
                     {match.prediction.expectedGoals.toFixed(1)}
                   </span>
                 </div>
@@ -338,9 +354,9 @@ export function MatchDetailModal({ match, onClose }: MatchDetailModalProps) {
                     {match.prediction.insights.map((ins, i) => (
                       <div
                         key={i}
-                        className="flex items-start gap-1.5 text-[11px] text-white/65"
+                        className="flex items-start gap-1.5 text-[11px] text-foreground/65"
                       >
-                        <span className="text-[#00ff88] mt-0.5">▸</span>
+                        <span className="text-[var(--strikr-green)] mt-0.5">▸</span>
                         <span>{ins}</span>
                       </div>
                     ))}
@@ -350,10 +366,10 @@ export function MatchDetailModal({ match, onClose }: MatchDetailModalProps) {
 
               {/* Live stats */}
               {match.stats && (
-                <div className="glass-card rounded-2xl p-4 mb-5">
+                <div className="surface-card rounded-2xl p-4 mb-5">
                   <div className="flex items-center gap-2 mb-3">
-                    <Activity className="w-4 h-4 text-[#22d3ee]" />
-                    <h3 className="text-sm font-bold text-white">
+                    <Activity className="w-4 h-4 text-[var(--strikr-cyan)]" />
+                    <h3 className="text-sm font-bold text-foreground">
                       Статистика матча
                     </h3>
                   </div>
@@ -399,55 +415,57 @@ export function MatchDetailModal({ match, onClose }: MatchDetailModalProps) {
               )}
 
               {/* H2H */}
-              <div className="glass-card rounded-2xl p-4 mb-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <Trophy className="w-4 h-4 text-[#ffb800]" />
-                  <h3 className="text-sm font-bold text-white">
-                    Личные встречи (H2H)
-                  </h3>
-                </div>
-                <div className="space-y-2">
-                  {match.h2h.map((h, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center justify-between glass rounded-lg p-2.5"
-                    >
-                      <div className="flex-1">
-                        <div className="text-[10px] text-white/45">
-                          {h.competition}
+              {match.h2h.length > 0 && (
+                <div className="surface-card rounded-2xl p-4 mb-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Trophy className="w-4 h-4 text-[var(--strikr-gold)]" />
+                    <h3 className="text-sm font-bold text-foreground">
+                      Личные встречи (H2H)
+                    </h3>
+                  </div>
+                  <div className="space-y-2">
+                    {match.h2h.map((h, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center justify-between surface-2 rounded-lg p-2.5"
+                      >
+                        <div className="flex-1">
+                          <div className="text-[10px] text-foreground/45">
+                            {h.competition}
+                          </div>
+                          <div className="text-[11px] text-foreground/65">
+                            {new Date(h.date).toLocaleDateString("ru", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </div>
                         </div>
-                        <div className="text-[11px] text-white/65">
-                          {new Date(h.date).toLocaleDateString("ru", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          })}
+                        <div className="text-lg font-black text-foreground tabular">
+                          {h.score}
                         </div>
-                      </div>
-                      <div className="text-lg font-black text-white tabular">
-                        {h.score}
-                      </div>
-                      <div className="flex-1 text-right">
-                        <span
-                          className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                            h.result === "HOME"
-                              ? "bg-[#00ff88]/20 text-[#00ff88]"
+                        <div className="flex-1 text-right">
+                          <span
+                            className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                              h.result === "HOME"
+                                ? "bg-[var(--strikr-green)]/15 text-[var(--strikr-green)]"
+                                : h.result === "AWAY"
+                                  ? "bg-[var(--strikr-purple)]/15 text-[var(--strikr-purple)]"
+                                  : "bg-[var(--surface-3)] text-foreground/60"
+                            }`}
+                          >
+                            {h.result === "HOME"
+                              ? "П1"
                               : h.result === "AWAY"
-                                ? "bg-[#a855f7]/20 text-[#a855f7]"
-                                : "bg-white/15 text-white/60"
-                          }`}
-                        >
-                          {h.result === "HOME"
-                            ? "П1"
-                            : h.result === "AWAY"
-                              ? "П2"
-                              : "X"}
-                        </span>
+                                ? "П2"
+                                : "X"}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Action buttons */}
               <div className="flex gap-2">

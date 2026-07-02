@@ -11,7 +11,8 @@ interface GlassCardProps {
 }
 
 /**
- * Glass morphism card with optional 3D tilt-on-cursor effect.
+ * Card with surface styling. Tilt effect is mouse-only
+ * (disabled on touch devices for Telegram performance).
  */
 export function GlassCard({
   children,
@@ -23,26 +24,32 @@ export function GlassCard({
   const ref = useRef<HTMLDivElement>(null);
   const [transform, setTransform] = useState<string>("");
   const [glowPos, setGlowPos] = useState<{ x: number; y: number } | null>(null);
+  const [isTouch, setIsTouch] = useState(false);
 
   const handleMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!tilt || !ref.current) return;
+    if (!tilt || isTouch || !ref.current) return;
     const rect = ref.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     const cx = rect.width / 2;
     const cy = rect.height / 2;
-    const rotX = ((y - cy) / cy) * -6;
-    const rotY = ((x - cx) / cx) * 6;
+    const rotX = ((y - cy) / cy) * -4;
+    const rotY = ((x - cx) / cx) * 4;
     setTransform(
-      `perspective(900px) rotateX(${rotX}deg) rotateY(${rotY}deg) scale(1.015)`,
+      `perspective(900px) rotateX(${rotX}deg) rotateY(${rotY}deg)`,
     );
     setGlowPos({ x, y });
   };
 
   const handleLeave = () => {
     if (!tilt) return;
-    setTransform("perspective(900px) rotateX(0deg) rotateY(0deg) scale(1)");
+    setTransform("perspective(900px) rotateX(0deg) rotateY(0deg)");
     setGlowPos(null);
+  };
+
+  // Detect touch device on mount
+  const handleTouchStart = () => {
+    setIsTouch(true);
   };
 
   return (
@@ -50,21 +57,20 @@ export function GlassCard({
       ref={ref}
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
+      onTouchStart={handleTouchStart}
       onClick={onClick}
-      style={{ transform: tilt ? transform : undefined }}
-      className={`glass-card rounded-2xl ${tilt ? "tilt-card" : ""} ${glow ? "hover-lift" : ""} ${onClick ? "cursor-pointer" : ""} ${className}`}
+      style={{ transform: tilt && !isTouch ? transform : undefined }}
+      className={`surface-card ${tilt && !isTouch ? "tilt-card" : ""} ${glow ? "hover-lift" : ""} ${onClick ? "cursor-pointer" : ""} ${className}`}
     >
       {glow && glowPos && (
         <div
-          className="pointer-events-none absolute inset-0 rounded-2xl opacity-40 transition-opacity"
+          className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-30 transition-opacity"
           style={{
-            background: `radial-gradient(220px circle at ${glowPos.x}px ${glowPos.y}px, rgba(0,255,136,0.18), transparent 60%)`,
+            background: `radial-gradient(180px circle at ${glowPos.x}px ${glowPos.y}px, var(--ring), transparent 60%)`,
           }}
         />
       )}
-      <div className="relative" style={{ transform: tilt ? "translateZ(40px)" : undefined }}>
-        {children}
-      </div>
+      <div className="relative">{children}</div>
     </div>
   );
 }

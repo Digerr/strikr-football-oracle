@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Match } from "@/lib/football-data";
 import { Hero } from "@/components/strikr/Hero";
@@ -22,6 +22,40 @@ interface MatchesResponse {
   timestamp: string;
 }
 
+// Memoized MatchCard to prevent re-renders when match data hasn't changed
+const MemoizedMatchCard = memo(MatchCard);
+
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-3">
+      {[1, 2, 3].map((i) => (
+        <div
+          key={i}
+          className="surface-card rounded-2xl p-4 skeleton-pulse"
+          style={{ animationDelay: `${i * 100}ms` }}
+        >
+          <div className="flex justify-between mb-3">
+            <div className="h-3 w-16 bg-[var(--surface-3)] rounded-full" />
+            <div className="h-3 w-12 bg-[var(--surface-3)] rounded-full" />
+          </div>
+          <div className="flex justify-between items-center mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-[var(--surface-3)]" />
+              <div className="h-3 w-20 bg-[var(--surface-3)] rounded" />
+            </div>
+            <div className="h-6 w-12 bg-[var(--surface-3)] rounded" />
+            <div className="flex items-center gap-2">
+              <div className="h-3 w-20 bg-[var(--surface-3)] rounded" />
+              <div className="w-8 h-8 rounded-lg bg-[var(--surface-3)]" />
+            </div>
+          </div>
+          <div className="h-12 bg-[var(--surface-3)] rounded-xl" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function Home() {
   const [tab, setTab] = useState<TabId>("home");
   const [filter, setFilter] = useState<MatchFilter>("all");
@@ -32,7 +66,6 @@ export default function Home() {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   const fetchMatches = useCallback(async () => {
-    setLoading(true);
     try {
       const res = await fetch("/api/matches?filter=all", { cache: "no-store" });
       if (res.ok) {
@@ -48,10 +81,10 @@ export default function Home() {
     }
   }, []);
 
-  // Initial fetch + auto-refresh every 60s
+  // Initial fetch + auto-refresh every 90s (was 60s — reduced TG load)
   useEffect(() => {
     fetchMatches();
-    const interval = setInterval(fetchMatches, 60_000);
+    const interval = setInterval(fetchMatches, 90_000);
     return () => clearInterval(interval);
   }, [fetchMatches]);
 
@@ -73,7 +106,7 @@ export default function Home() {
         try {
           tg.ready?.();
           tg.expand?.();
-          tg.setHeaderColor?.("#06121a");
+          tg.setHeaderColor?.("#f3f4f8");
         } catch {
           // ignore
         }
@@ -81,7 +114,7 @@ export default function Home() {
     }
   }, []);
 
-  // Derived data
+  // Derived data — memoized
   const liveMatches = useMemo(
     () => allMatches.filter((m) => m.status === "LIVE"),
     [allMatches],
@@ -152,7 +185,34 @@ export default function Home() {
     }
   }, [filter, allMatches, liveMatches, upcomingMatches, hotMatches, finishedMatches]);
 
-  const handleMatchClick = (m: Match) => setSelectedMatch(m);
+  const handleMatchClick = useCallback((m: Match) => {
+    setSelectedMatch(m);
+  }, []);
+
+  const handleTabChange = useCallback((t: TabId) => {
+    setTab(t);
+  }, []);
+
+  const handleFilterChange = useCallback((f: MatchFilter) => {
+    setFilter(f);
+  }, []);
+
+  const handleHeroExplore = useCallback(() => setTab("predictions"), []);
+  const handleHeroSeeHot = useCallback(() => {
+    setFilter("hot");
+    setTab("matches");
+  }, []);
+
+  // Memoized handlers for "Все" buttons — prevent re-renders
+  const goLive = useCallback(() => {
+    setFilter("live");
+    setTab("matches");
+  }, []);
+  const goPredictions = useCallback(() => setTab("predictions"), []);
+  const goHot = useCallback(() => {
+    setFilter("hot");
+    setTab("matches");
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col safe-top safe-bottom">
@@ -162,27 +222,27 @@ export default function Home() {
         {/* Live data indicator */}
         <div className="px-4 pt-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {loading ? (
-              <Loader2 className="w-3 h-3 animate-spin text-[#00ff88]" />
+            {loading && allMatches.length === 0 ? (
+              <Loader2 className="w-3 h-3 animate-spin text-[var(--strikr-brand)]" />
             ) : (
               <span
                 className={`w-2 h-2 rounded-full ${
                   dataSource === "live"
-                    ? "bg-[#00ff88] pulse-glow"
-                    : "bg-[#ffb800]"
+                    ? "bg-[var(--strikr-green)] pulse-glow"
+                    : "bg-[var(--strikr-gold)]"
                 }`}
               />
             )}
-            <span className="text-[10px] uppercase tracking-wider text-white/55 font-bold">
+            <span className="text-[10px] uppercase tracking-wider text-foreground/55 font-bold">
               {dataSource === "live" ? "Live API" : "Demo data"}
             </span>
-            <span className="text-[10px] text-white/35">
+            <span className="text-[10px] text-foreground/35">
               · обновлено {lastUpdated.toLocaleTimeString("ru", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
             </span>
           </div>
           <button
             onClick={fetchMatches}
-            className="text-[10px] text-white/45 hover:text-white font-bold uppercase tracking-wider transition-colors"
+            className="text-[10px] text-foreground/45 hover:text-foreground font-bold uppercase tracking-wider transition-colors"
           >
             ↻ Обновить
           </button>
@@ -195,16 +255,13 @@ export default function Home() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
+              transition={{ duration: 0.2 }}
             >
               <Hero
                 liveCount={liveMatches.length}
                 hotCount={hotMatches.length}
-                onExplore={() => setTab("predictions")}
-                onSeeHot={() => {
-                  setFilter("hot");
-                  setTab("matches");
-                }}
+                onExplore={handleHeroExplore}
+                onSeeHot={handleHeroSeeHot}
               />
 
               <div className="px-4 space-y-5">
@@ -217,24 +274,21 @@ export default function Home() {
                       <section>
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-[#ff3366] live-pulse" />
-                            <h2 className="text-base font-black text-white uppercase tracking-tight">
+                            <span className="w-2 h-2 rounded-full bg-[var(--strikr-red)] live-pulse" />
+                            <h2 className="text-base font-black text-foreground uppercase tracking-tight">
                               Live сейчас
                             </h2>
                           </div>
                           <button
-                            onClick={() => {
-                              setFilter("live");
-                              setTab("matches");
-                            }}
-                            className="text-[11px] font-bold text-[#00ff88] flex items-center gap-0.5"
+                            onClick={goLive}
+                            className="text-[11px] font-bold text-[var(--strikr-brand)] flex items-center gap-0.5"
                           >
                             Все <ChevronRight className="w-3 h-3" />
                           </button>
                         </div>
                         <div className="space-y-3">
                           {liveMatches.slice(0, 4).map((m, i) => (
-                            <MatchCard
+                            <MemoizedMatchCard
                               key={m.id}
                               match={m}
                               index={i}
@@ -250,23 +304,23 @@ export default function Home() {
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <Sparkles
-                            className="w-4 h-4 text-[#a855f7]"
-                            fill="#a855f7"
+                            className="w-4 h-4 text-[var(--strikr-purple)]"
+                            fill="var(--strikr-purple)"
                           />
-                          <h2 className="text-base font-black text-white uppercase tracking-tight">
+                          <h2 className="text-base font-black text-foreground uppercase tracking-tight">
                             Топ прогнозы ИИ
                           </h2>
                         </div>
                         <button
-                          onClick={() => setTab("predictions")}
-                          className="text-[11px] font-bold text-[#00ff88] flex items-center gap-0.5"
+                          onClick={goPredictions}
+                          className="text-[11px] font-bold text-[var(--strikr-brand)] flex items-center gap-0.5"
                         >
                           Все <ChevronRight className="w-3 h-3" />
                         </button>
                       </div>
                       <div className="space-y-3">
                         {topPredictions.slice(0, 3).map((m, i) => (
-                          <MatchCard
+                          <MemoizedMatchCard
                             key={m.id}
                             match={m}
                             index={i}
@@ -281,26 +335,23 @@ export default function Home() {
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <Flame
-                            className="w-4 h-4 text-[#ff6b35]"
-                            fill="#ff6b35"
+                            className="w-4 h-4 text-[var(--strikr-orange)]"
+                            fill="var(--strikr-orange)"
                           />
-                          <h2 className="text-base font-black text-white uppercase tracking-tight">
+                          <h2 className="text-base font-black text-foreground uppercase tracking-tight">
                             Горячие матчи
                           </h2>
                         </div>
                         <button
-                          onClick={() => {
-                            setFilter("hot");
-                            setTab("matches");
-                          }}
-                          className="text-[11px] font-bold text-[#00ff88] flex items-center gap-0.5"
+                          onClick={goHot}
+                          className="text-[11px] font-bold text-[var(--strikr-brand)] flex items-center gap-0.5"
                         >
                           Все <ChevronRight className="w-3 h-3" />
                         </button>
                       </div>
                       <div className="space-y-3">
                         {hotMatches.slice(0, 3).map((m, i) => (
-                          <MatchCard
+                          <MemoizedMatchCard
                             key={m.id}
                             match={m}
                             index={i}
@@ -321,15 +372,17 @@ export default function Home() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.25 }}
+              transition={{ duration: 0.2 }}
               className="px-4 pt-4"
             >
               <div className="mb-4">
-                <h1 className="text-2xl font-black text-white">
+                <h1 className="text-2xl font-black text-foreground">
                   Все <span className="gradient-text">матчи</span>
                 </h1>
-                <p className="text-[11px] text-white/45 mt-0.5">
-                  {loading ? "Загрузка..." : `${filteredMatches.length} матчей · ${dataSource === "live" ? "live API" : "demo"} · обновлено ${lastUpdated.toLocaleTimeString("ru", { hour: "2-digit", minute: "2-digit" })}`}
+                <p className="text-[11px] text-foreground/45 mt-0.5">
+                  {loading
+                    ? "Загрузка..."
+                    : `${filteredMatches.length} матчей · ${dataSource === "live" ? "live API" : "demo"} · обновлено ${lastUpdated.toLocaleTimeString("ru", { hour: "2-digit", minute: "2-digit" })}`}
                 </p>
               </div>
 
@@ -346,21 +399,29 @@ export default function Home() {
                   return (
                     <button
                       key={f.id}
-                      onClick={() => setFilter(f.id)}
+                      onClick={() => handleFilterChange(f.id)}
                       className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
                         isActive
-                          ? "bg-gradient-to-r from-[#00ff88] to-[#22d3ee] text-[#06121a] shadow-[0_4px_14px_rgba(0,255,136,0.35)]"
-                          : "glass text-white/70 hover:text-white"
+                          ? "text-white shadow-[0_2px_8px_var(--ring)]"
+                          : "surface-2 text-foreground/70 hover:text-foreground"
                       }`}
+                      style={
+                        isActive
+                          ? {
+                              background:
+                                "linear-gradient(135deg, var(--strikr-brand), var(--strikr-brand-dark))",
+                            }
+                          : undefined
+                      }
                     >
                       {f.id === "live" && (
                         <span
-                          className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-[#06121a]" : "bg-[#ff3366] live-pulse"}`}
+                          className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-white" : "bg-[var(--strikr-red)] live-pulse"}`}
                         />
                       )}
                       {f.label}
                       <span
-                        className={`text-[10px] tabular ${isActive ? "text-[#06121a]/70" : "text-white/40"}`}
+                        className={`text-[10px] tabular ${isActive ? "text-white/70" : "text-foreground/40"}`}
                       >
                         {f.count}
                       </span>
@@ -375,7 +436,7 @@ export default function Home() {
                   {leagues.map((l) => (
                     <div
                       key={l.short}
-                      className="flex-shrink-0 px-3 py-1 rounded-full text-[10px] font-bold text-white/80 glass flex items-center gap-1.5"
+                      className="flex-shrink-0 px-3 py-1 rounded-full text-[10px] font-bold text-foreground/80 surface-2 flex items-center gap-1.5"
                     >
                       <span
                         className="w-1.5 h-1.5 rounded-full"
@@ -391,29 +452,22 @@ export default function Home() {
               {loading && filteredMatches.length === 0 ? (
                 <LoadingSkeleton />
               ) : (
-                <motion.div
-                  key={filter}
-                  initial="hidden"
-                  animate="visible"
-                  className="space-y-3"
-                >
-                  <AnimatePresence mode="popLayout">
-                    {filteredMatches.map((m, i) => (
-                      <MatchCard
-                        key={m.id}
-                        match={m}
-                        index={i}
-                        onClick={() => handleMatchClick(m)}
-                      />
-                    ))}
-                  </AnimatePresence>
-                </motion.div>
+                <div key={filter} className="space-y-3">
+                  {filteredMatches.map((m, i) => (
+                    <MemoizedMatchCard
+                      key={m.id}
+                      match={m}
+                      index={i}
+                      onClick={() => handleMatchClick(m)}
+                    />
+                  ))}
+                </div>
               )}
 
               {!loading && filteredMatches.length === 0 && (
                 <GlassCard className="p-8 text-center">
-                  <Activity className="w-8 h-8 text-white/30 mx-auto mb-2" />
-                  <div className="text-sm text-white/55 font-medium">
+                  <Activity className="w-8 h-8 text-foreground/30 mx-auto mb-2" />
+                  <div className="text-sm text-foreground/55 font-medium">
                     Нет матчей в этом фильтре
                   </div>
                 </GlassCard>
@@ -427,56 +481,61 @@ export default function Home() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.25 }}
+              transition={{ duration: 0.2 }}
               className="px-4 pt-4"
             >
               <div className="mb-4">
-                <h1 className="text-2xl font-black text-white">
+                <h1 className="text-2xl font-black text-foreground">
                   <span className="gradient-text">ИИ-прогнозы</span>
                 </h1>
-                <p className="text-[11px] text-white/45 mt-0.5">
+                <p className="text-[11px] text-foreground/45 mt-0.5">
                   Отсортировано по уверенности модели
                 </p>
               </div>
 
               {/* AI Engine banner */}
-              <GlassCard tilt glow className="p-4 mb-4">
+              <GlassCard glow className="p-4 mb-4">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#a855f7] to-[#6366f1] flex items-center justify-center pulse-glow">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center pulse-glow"
+                    style={{
+                      background: "linear-gradient(135deg, var(--strikr-purple), var(--strikr-violet))",
+                    }}
+                  >
                     <Sparkles className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <div className="text-[10px] uppercase tracking-wider text-white/45 font-bold">
+                    <div className="text-[10px] uppercase tracking-wider text-foreground/45 font-bold">
                       Neural Engine v3.2
                     </div>
-                    <div className="text-sm font-black text-white">
+                    <div className="text-sm font-black text-foreground">
                       Точность за 30 дней:{" "}
-                      <span className="text-[#00ff88]">87%</span>
+                      <span className="text-[var(--strikr-green)]">87%</span>
                     </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="glass rounded-lg p-2 text-center">
-                    <div className="text-sm font-black text-[#00ff88] tabular">
+                  <div className="surface-2 rounded-lg p-2 text-center">
+                    <div className="text-sm font-black text-[var(--strikr-green)] tabular">
                       142
                     </div>
-                    <div className="text-[9px] uppercase tracking-wider text-white/45 font-bold">
+                    <div className="text-[9px] uppercase tracking-wider text-foreground/45 font-bold">
                       Верно
                     </div>
                   </div>
-                  <div className="glass rounded-lg p-2 text-center">
-                    <div className="text-sm font-black text-[#ff6b35] tabular">
+                  <div className="surface-2 rounded-lg p-2 text-center">
+                    <div className="text-sm font-black text-[var(--strikr-orange)] tabular">
                       21
                     </div>
-                    <div className="text-[9px] uppercase tracking-wider text-white/45 font-bold">
+                    <div className="text-[9px] uppercase tracking-wider text-foreground/45 font-bold">
                       Мимо
                     </div>
                   </div>
-                  <div className="glass rounded-lg p-2 text-center">
-                    <div className="text-sm font-black text-[#22d3ee] tabular">
+                  <div className="surface-2 rounded-lg p-2 text-center">
+                    <div className="text-sm font-black text-[var(--strikr-brand)] tabular">
                       163
                     </div>
-                    <div className="text-[9px] uppercase tracking-wider text-white/45 font-bold">
+                    <div className="text-[9px] uppercase tracking-wider text-foreground/45 font-bold">
                       Всего
                     </div>
                   </div>
@@ -488,7 +547,7 @@ export default function Home() {
                   <LoadingSkeleton />
                 ) : (
                   topPredictions.map((m, i) => (
-                    <MatchCard
+                    <MemoizedMatchCard
                       key={m.id}
                       match={m}
                       index={i}
@@ -506,14 +565,14 @@ export default function Home() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.25 }}
+              transition={{ duration: 0.2 }}
               className="px-4 pt-4"
             >
               <div className="mb-4">
-                <h1 className="text-2xl font-black text-white">
+                <h1 className="text-2xl font-black text-foreground">
                   Мой <span className="gradient-text">профиль</span>
                 </h1>
-                <p className="text-[11px] text-white/45 mt-0.5">
+                <p className="text-[11px] text-foreground/45 mt-0.5">
                   Рейтинг, достижения и лидерборд
                 </p>
               </div>
@@ -526,43 +585,12 @@ export default function Home() {
         </AnimatePresence>
       </main>
 
-      <BottomNav active={tab} onChange={setTab} />
+      <BottomNav active={tab} onChange={handleTabChange} />
 
       <MatchDetailModal
         match={selectedMatch}
         onClose={() => setSelectedMatch(null)}
       />
-    </div>
-  );
-}
-
-function LoadingSkeleton() {
-  return (
-    <div className="space-y-3">
-      {[1, 2, 3].map((i) => (
-        <div
-          key={i}
-          className="glass-card rounded-2xl p-4 animate-pulse"
-          style={{ animationDelay: `${i * 100}ms` }}
-        >
-          <div className="flex justify-between mb-3">
-            <div className="h-3 w-16 bg-white/10 rounded-full" />
-            <div className="h-3 w-12 bg-white/10 rounded-full" />
-          </div>
-          <div className="flex justify-between items-center mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-white/10" />
-              <div className="h-3 w-20 bg-white/10 rounded" />
-            </div>
-            <div className="h-6 w-12 bg-white/10 rounded" />
-            <div className="flex items-center gap-2">
-              <div className="h-3 w-20 bg-white/10 rounded" />
-              <div className="w-8 h-8 rounded-lg bg-white/10" />
-            </div>
-          </div>
-          <div className="h-12 bg-white/5 rounded-xl" />
-        </div>
-      ))}
     </div>
   );
 }
