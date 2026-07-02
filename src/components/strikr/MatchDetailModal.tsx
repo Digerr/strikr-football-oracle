@@ -5,6 +5,7 @@ import type { Match } from "@/lib/football-data";
 import { GlassCard } from "./GlassCard";
 import { ConfidenceBar } from "./ConfidenceBar";
 import { ShimmerButton } from "./ShimmerButton";
+import { TeamCrest } from "./TeamCrest";
 import {
   X,
   MapPin,
@@ -136,14 +137,13 @@ export function MatchDetailModal({ match, onClose }: MatchDetailModalProps) {
               {/* Teams & score */}
               <div className="flex items-center justify-between gap-3 mb-5">
                 <div className="flex-1 text-center">
-                  <div
-                    className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-3xl mb-2"
-                    style={{
-                      background: `linear-gradient(135deg, ${match.homeTeam.color}33, ${match.homeTeam.color}11)`,
-                      border: `1px solid ${match.homeTeam.color}55`,
-                    }}
-                  >
-                    {match.homeTeam.crest}
+                  <div className="flex justify-center mb-2">
+                    <TeamCrest
+                      crest={match.homeTeam.crest}
+                      color={match.homeTeam.color}
+                      size={64}
+                      rounded="rounded-2xl"
+                    />
                   </div>
                   <div className="font-bold text-sm text-white">
                     {match.homeTeam.name}
@@ -191,14 +191,13 @@ export function MatchDetailModal({ match, onClose }: MatchDetailModalProps) {
                 </div>
 
                 <div className="flex-1 text-center">
-                  <div
-                    className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center text-3xl mb-2"
-                    style={{
-                      background: `linear-gradient(135deg, ${match.awayTeam.color}33, ${match.awayTeam.color}11)`,
-                      border: `1px solid ${match.awayTeam.color}55`,
-                    }}
-                  >
-                    {match.awayTeam.crest}
+                  <div className="flex justify-center mb-2">
+                    <TeamCrest
+                      crest={match.awayTeam.crest}
+                      color={match.awayTeam.color}
+                      size={64}
+                      rounded="rounded-2xl"
+                    />
                   </div>
                   <div className="font-bold text-sm text-white">
                     {match.awayTeam.name}

@@ -2,6 +2,7 @@
 
 import { GlassCard } from "./GlassCard";
 import { ConfidenceBar } from "./ConfidenceBar";
+import { TeamCrest } from "./TeamCrest";
 import type { Match } from "@/lib/football-data";
 import { motion } from "framer-motion";
 import { Clock, MapPin, Flame, TrendingUp } from "lucide-react";
@@ -78,6 +79,11 @@ export function MatchCard({ match, onClick, index = 0 }: MatchCardProps) {
             >
               {match.leagueShort}
             </span>
+            {match.stage && (
+              <span className="text-[9px] text-white/50 font-bold uppercase tracking-wider">
+                {match.stage.replace(/_/g, " ")}
+              </span>
+            )}
             <span className="text-[10px] text-white/40 font-medium">
               {match.country}
             </span>
@@ -112,15 +118,11 @@ export function MatchCard({ match, onClick, index = 0 }: MatchCardProps) {
         <div className="flex items-center justify-between gap-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <span
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-base"
-                style={{
-                  background: `linear-gradient(135deg, ${match.homeTeam.color}33, ${match.homeTeam.color}11)`,
-                  border: `1px solid ${match.homeTeam.color}55`,
-                }}
-              >
-                {match.homeTeam.crest}
-              </span>
+              <TeamCrest
+                crest={match.homeTeam.crest}
+                color={match.homeTeam.color}
+                size={32}
+              />
               <span className="font-bold text-sm text-white truncate">
                 {match.homeTeam.name}
               </span>
@@ -155,15 +157,11 @@ export function MatchCard({ match, onClick, index = 0 }: MatchCardProps) {
               <span className="font-bold text-sm text-white truncate">
                 {match.awayTeam.name}
               </span>
-              <span
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-base"
-                style={{
-                  background: `linear-gradient(135deg, ${match.awayTeam.color}33, ${match.awayTeam.color}11)`,
-                  border: `1px solid ${match.awayTeam.color}55`,
-                }}
-              >
-                {match.awayTeam.crest}
-              </span>
+              <TeamCrest
+                crest={match.awayTeam.crest}
+                color={match.awayTeam.color}
+                size={32}
+              />
             </div>
             <div className="flex justify-end">
               <FormBadges form={match.awayTeam.form} />
