@@ -399,37 +399,57 @@ async function fdfFetch<T>(path: string): Promise<T | null> {
 
 /**
  * Get recent finished matches for a team (for form).
+ * Cached 10min. Silently returns [] on error.
  */
 async function getTeamForm(teamId: number): Promise<("W" | "D" | "L")[]> {
   const cacheKey = `form-${teamId}`;
   const cached = getCached<("W" | "D" | "L")[]>(cacheKey);
   if (cached) return cached;
 
-  const data = await fdfFetch<{
-    matches: Array<{
-      homeTeam: { id: number };
-      awayTeam: { id: number };
-      score: { fullTime: { home: number | null; away: number | null } };
-      status: string;
-    }>;
-  }>(`/teams/${teamId}/matches?status=FINISHED&limit=5`);
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
 
-  if (!data || !data.matches) return [];
+    const res = await fetch(
+      `${API_BASE}/teams/${teamId}/matches?status=FINISHED&limit=5`,
+      {
+        headers: { "X-Auth-Token": API_KEY },
+        signal: controller.signal,
+        next: { revalidate: 600 },
+      },
+    );
+    clearTimeout(timeout);
 
-  const form: ("W" | "D" | "L")[] = data.matches
-    .slice(0, 5)
-    .map((m) => {
-      const isHome = m.homeTeam.id === teamId;
-      const our = isHome ? m.score.fullTime.home : m.score.fullTime.away;
-      const their = isHome ? m.score.fullTime.away : m.score.fullTime.home;
-      if (our === null || their === null) return "D" as const;
-      if (our > their) return "W" as const;
-      if (our < their) return "L" as const;
-      return "D" as const;
-    });
+    if (!res.ok) return [];
 
-  setCached(cacheKey, form, 10 * 60 * 1000); // 10 min
-  return form;
+    const data = await res.json();
+    if (!data || !data.matches) return [];
+
+    const form: ("W" | "D" | "L")[] = data.matches
+      .slice(0, 5)
+      .map(
+        (m: {
+          homeTeam: { id: number };
+          awayTeam: { id: number };
+          score: {
+            fullTime: { home: number | null; away: number | null };
+          };
+        }) => {
+          const isHome = m.homeTeam.id === teamId;
+          const our = isHome ? m.score.fullTime.home : m.score.fullTime.away;
+          const their = isHome ? m.score.fullTime.away : m.score.fullTime.home;
+          if (our === null || their === null) return "D" as const;
+          if (our > their) return "W" as const;
+          if (our < their) return "L" as const;
+          return "D" as const;
+        },
+      );
+
+    setCached(cacheKey, form, 10 * 60 * 1000); // 10 min
+    return form;
+  } catch {
+    return [];
+  }
 }
 
 /**
@@ -455,9 +475,27 @@ async function fetchLiveMatchesFromApi(): Promise<Match[] | null> {
 
   // /v4/matches with dateFrom/dateTo returns all matches across competitions
   // we have access to in the date range.
-  const data = await fdfFetch<{ matches: FDFMatch[]; count: number }>(
-    `/matches?dateFrom=${dateFrom}&dateTo=${dateTo}`,
-  );
+  let data: { matches: FDFMatch[]; count: number } | null = null;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    const res = await fetch(
+      `${API_BASE}/matches?dateFrom=${dateFrom}&dateTo=${dateTo}`,
+      {
+        headers: { "X-Auth-Token": API_KEY },
+        signal: controller.signal,
+        next: { revalidate: 60 },
+      },
+    );
+    clearTimeout(timeout);
+    if (res.ok) {
+      data = await res.json();
+    } else {
+      console.error(`[FDF] /matches → ${res.status}`);
+    }
+  } catch (e) {
+    console.error(`[FDF] /matches failed:`, e);
+  }
 
   if (!data || !data.matches || data.matches.length === 0) {
     return null;
@@ -465,27 +503,23 @@ async function fetchLiveMatchesFromApi(): Promise<Match[] | null> {
 
   // Build Match objects
   const matches: Match[] = [];
-  const formPromises: Array<Promise<void>> = [];
 
   for (const m of data.matches) {
     // Skip TBD matchups (homeTeam/awayTeam can be null in knockout brackets)
     if (!m.homeTeam || !m.awayTeam) continue;
 
     // Only include tracked competitions
-    if (!LEAGUES[m.competition.code] && !TRACKED_COMPS.includes(m.competition.code)) {
-      // Still include if it's a known competition we didn't pre-list
-      // but skip obscure ones
+    if (
+      !LEAGUES[m.competition.code] &&
+      !TRACKED_COMPS.includes(m.competition.code)
+    ) {
       continue;
     }
 
-    const leagueMeta =
-      LEAGUES[m.competition.code] || {
-        ...DEFAULT_LEAGUE,
-        name: m.competition.name,
-      };
-
-    const homeForm: ("W" | "D" | "L")[] = [];
-    const awayForm: ("W" | "D" | "L")[] = [];
+    const leagueMeta = LEAGUES[m.competition.code] || {
+      ...DEFAULT_LEAGUE,
+      name: m.competition.name,
+    };
 
     const homeTeam: Team = {
       id: `t${m.homeTeam.id}`,
@@ -496,7 +530,7 @@ async function fetchLiveMatchesFromApi(): Promise<Match[] | null> {
         m.homeTeam.name.slice(0, 3),
       crest: m.homeTeam.crest || "⚽",
       color: getTeamColor(m.homeTeam.name),
-      form: homeForm,
+      form: [],
     };
 
     const awayTeam: Team = {
@@ -508,7 +542,7 @@ async function fetchLiveMatchesFromApi(): Promise<Match[] | null> {
         m.awayTeam.name.slice(0, 3),
       crest: m.awayTeam.crest || "⚽",
       color: getTeamColor(m.awayTeam.name),
-      form: awayForm,
+      form: [],
     };
 
     // Determine status
@@ -552,7 +586,6 @@ async function fetchLiveMatchesFromApi(): Promise<Match[] | null> {
     const stage = m.stage || undefined;
     const group = m.group || undefined;
 
-    // Importance: WC playoffs and finals = 5, WC group = 4, CL = 4, top leagues = 3
     let importance = 3;
     if (m.competition.code === "WC") {
       if (
@@ -570,17 +603,6 @@ async function fetchLiveMatchesFromApi(): Promise<Match[] | null> {
     }
 
     const matchId = `fdf-${m.id}`;
-
-    // Async fetch form for each team
-    const p = (async () => {
-      const [hForm, aForm] = await Promise.all([
-        getTeamForm(m.homeTeam.id),
-        getTeamForm(m.awayTeam.id),
-      ]);
-      homeTeam.form = hForm;
-      awayTeam.form = aForm;
-    })();
-    formPromises.push(p);
 
     const prediction = makePrediction(homeTeam, awayTeam, matchId, stage);
 
@@ -610,20 +632,16 @@ async function fetchLiveMatchesFromApi(): Promise<Match[] | null> {
     });
   }
 
-  // Wait for all form fetches (with timeout safety)
-  await Promise.race([
-    Promise.all(formPromises),
-    new Promise((r) => setTimeout(r, 3000)),
-  ]);
+  // Form fetching is now fire-and-forget per match (called from getMatchById
+  // or via a separate background task). For listing endpoints we skip it
+  // to stay within football-data.org's 10 req/min limit.
 
   // Sort: LIVE first, then UPCOMING by date, then FINISHED by most recent
   matches.sort((a, b) => {
     if (a.status === "LIVE" && b.status !== "LIVE") return -1;
     if (a.status !== "LIVE" && b.status === "LIVE") return 1;
     if (a.status === "FINISHED" && b.status === "FINISHED") {
-      return (
-        new Date(b.kickoff).getTime() - new Date(a.kickoff).getTime()
-      );
+      return new Date(b.kickoff).getTime() - new Date(a.kickoff).getTime();
     }
     return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
   });
@@ -823,9 +841,38 @@ export async function getHotMatches(): Promise<Match[]> {
     .sort((a, b) => b.importance - a.importance);
 }
 
-export async function getMatchById(id: string): Promise<Match | undefined> {
+export async function getMatchById(
+  id: string,
+): Promise<Match | undefined> {
   const all = await getAllMatches();
-  return all.find((m) => m.id === id);
+  const match = all.find((m) => m.id === id);
+  if (!match) return undefined;
+
+  // If form is empty, try to fetch it (for detail modal)
+  if (
+    match.homeTeam.form.length === 0 &&
+    match.awayTeam.form.length === 0 &&
+    API_KEY
+  ) {
+    const fdfId = parseInt(id.replace("fdf-", ""), 10);
+    if (!isNaN(fdfId)) {
+      // Fetch both teams' forms sequentially (respect rate limit)
+      try {
+        const homeFdfId = parseInt(match.homeTeam.id.replace("t", ""), 10);
+        const awayFdfId = parseInt(match.awayTeam.id.replace("t", ""), 10);
+        const [hForm, aForm] = await Promise.all([
+          getTeamForm(homeFdfId),
+          getTeamForm(awayFdfId),
+        ]);
+        match.homeTeam.form = hForm;
+        match.awayTeam.form = aForm;
+      } catch {
+        // ignore, keep empty form
+      }
+    }
+  }
+
+  return match;
 }
 
 export async function getTopPredictions(limit = 5): Promise<Match[]> {
