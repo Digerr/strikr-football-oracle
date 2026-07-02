@@ -52,3 +52,7 @@ prompt
 server.log
 # Skills directory
 /skills/
+# Environment variables (never commit)
+.env
+.env.local
+.env.production
