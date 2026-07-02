@@ -343,17 +343,17 @@ interface FDFMatch {
   group: string | null;
   homeTeam: {
     id: number;
-    name: string;
-    shortName: string;
-    tla: string;
-    crest: string;
+    name: string | null;
+    shortName: string | null;
+    tla: string | null;
+    crest: string | null;
   } | null;
   awayTeam: {
     id: number;
-    name: string;
-    shortName: string;
-    tla: string;
-    crest: string;
+    name: string | null;
+    shortName: string | null;
+    tla: string | null;
+    crest: string | null;
   } | null;
   score: {
     winner: string | null;
@@ -363,7 +363,7 @@ interface FDFMatch {
   };
   competition: { id: number; name: string; code: string; emblem: string };
   venue?: string | null;
-  referees?: Array<{ name: string; type: string; nationality: string }>;
+  referees?: Array<{ name: string; type: string; nationality: string }> | null;
 }
 
 interface FDFFormEntry {
@@ -507,6 +507,7 @@ async function fetchLiveMatchesFromApi(): Promise<Match[] | null> {
   for (const m of data.matches) {
     // Skip TBD matchups (homeTeam/awayTeam can be null in knockout brackets)
     if (!m.homeTeam || !m.awayTeam) continue;
+    if (!m.homeTeam.name || !m.awayTeam.name) continue;
 
     // Only include tracked competitions
     if (
@@ -521,27 +522,30 @@ async function fetchLiveMatchesFromApi(): Promise<Match[] | null> {
       name: m.competition.name,
     };
 
+    const homeTeamName = m.homeTeam.name;
+    const awayTeamName = m.awayTeam.name;
+
     const homeTeam: Team = {
       id: `t${m.homeTeam.id}`,
-      name: m.homeTeam.name,
+      name: homeTeamName,
       shortName:
         m.homeTeam.tla ||
         m.homeTeam.shortName ||
-        m.homeTeam.name.slice(0, 3),
+        homeTeamName.slice(0, 3),
       crest: m.homeTeam.crest || "⚽",
-      color: getTeamColor(m.homeTeam.name),
+      color: getTeamColor(homeTeamName),
       form: [],
     };
 
     const awayTeam: Team = {
       id: `t${m.awayTeam.id}`,
-      name: m.awayTeam.name,
+      name: awayTeamName,
       shortName:
         m.awayTeam.tla ||
         m.awayTeam.shortName ||
-        m.awayTeam.name.slice(0, 3),
+        awayTeamName.slice(0, 3),
       crest: m.awayTeam.crest || "⚽",
-      color: getTeamColor(m.awayTeam.name),
+      color: getTeamColor(awayTeamName),
       form: [],
     };
 
