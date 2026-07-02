@@ -4,6 +4,12 @@
   "buildCommand": "next build",
   "installCommand": "bun install",
   "regions": ["fra1"],
+  "crons": [
+    {
+      "path": "/api/cron/refresh",
+      "schedule": "*/30 * * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

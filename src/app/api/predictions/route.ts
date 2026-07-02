@@ -1,19 +1,32 @@
 import { NextResponse } from "next/server";
-import { getTopPredictions } from "@/lib/football-data";
+import { getAllPredictions } from "@/lib/predictions";
 
 export const dynamic = "force-dynamic";
-export const revalidate = 60;
+export const revalidate = 300; // 5 min
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const limit = parseInt(searchParams.get("limit") || "5", 10);
+  const sport = searchParams.get("sport");
+  const status = searchParams.get("status");
+  const limit = parseInt(searchParams.get("limit") || "50", 10);
 
-  const matches = await getTopPredictions(limit);
+  let predictions = await getAllPredictions();
+
+  if (sport && sport !== "all") {
+    predictions = predictions.filter((p) => p.sport === sport);
+  }
+  if (status && status !== "all") {
+    predictions = predictions.filter((p) => p.status === status);
+  }
+
+  predictions = predictions
+    .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
+    .slice(0, limit);
+
   return NextResponse.json({
     ok: true,
-    count: matches.length,
-    predictions: matches,
-    source: process.env.FOOTBALL_DATA_API_KEY ? "live" : "mock",
+    count: predictions.length,
+    predictions,
     timestamp: new Date().toISOString(),
   });
 }

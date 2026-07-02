@@ -1,8 +1,8 @@
 "use client";
 
-import { Home, Trophy, Sparkles, BarChart3 } from "lucide-react";
+import { Home, Trophy, Users, Layers } from "lucide-react";
 
-export type TabId = "home" | "matches" | "predictions" | "stats";
+export type TabId = "feed" | "matches" | "cappers" | "expresses";
 
 interface BottomNavProps {
   active: TabId;
@@ -10,10 +10,10 @@ interface BottomNavProps {
 }
 
 const TABS: { id: TabId; label: string; icon: typeof Home }[] = [
-  { id: "home", label: "Главная", icon: Home },
+  { id: "feed", label: "Лента", icon: Home },
   { id: "matches", label: "Матчи", icon: Trophy },
-  { id: "predictions", label: "Прогнозы", icon: Sparkles },
-  { id: "stats", label: "Рейтинг", icon: BarChart3 },
+  { id: "cappers", label: "Капперы", icon: Users },
+  { id: "expresses", label: "Экспрессы", icon: Layers },
 ];
 
 export function BottomNav({ active, onChange }: BottomNavProps) {
